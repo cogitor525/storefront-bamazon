@@ -1,0 +1,24 @@
+{
+  "name": "storefront-bamazon",
+  "version": "1.0.0",
+  "description": "Amazon-like storefront using MySQL; the app takes \"orders\" and will deplete stock accordingly from the store's inventory",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cogitor525/storefront-bamazon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cogitor525/storefront-bamazon/issues"
+  },
+  "homepage": "https://github.com/cogitor525/storefront-bamazon#readme",
+  "dependencies": {
+    "inquirer": "^7.0.0",
+    "mysql": "^2.17.1"
+  }
+}
