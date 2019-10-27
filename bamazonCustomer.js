@@ -35,11 +35,48 @@ function displayItems() {
         }, {});
 
         console.table(idAsIndex);
+        promptUser(idAsIndex);
     });
 }
 
+function promptUser(items) {
+    inquirer
+        .prompt([
+            {
+                name: "confirm",
+                type: "confirm",
+                message: "Would you like to place an order?"
+            }
+        ])
+        .then(function(answer) {
+            if (answer.confirm) {
+                inquirer
+                    .prompt([
+                        {
+                            name: "id",
+                            type: "rawlist",
+                            message: "Please select desired item by ID (index)",
+                            choices: Object.keys(items)
+                        },
+                        {
+                            name: "qty",
+                            message: "How many would you like to order?",
+                            validate: function(value) {
+                                if (!isNaN(value) && parseInt(value) > 0) {
+                                    return true;
+                                }
+                                return false;
+                            }
+                        }
+                    ])
+                    .then(function(order) {
+                        console.log("placing order for " + order.qty + " unit(s) of " + order.id);
 
-// 6. The app should then prompt users with two messages.
+                    });
+            } else {
+                console.log("exiting app...");
+                connection.end();
+            }
+        });
+}
 
-//    * The first should ask them the ID of the product they would like to buy.
-//    * The second message should ask how many units of the product they would like to buy.
