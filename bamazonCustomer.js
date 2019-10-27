@@ -15,6 +15,8 @@ connection.connect(function(err) {
     displayItems();
 });
 
+let itemIDs;
+
 function displayItems() {
     const query = "SELECT item_id,product_name,price FROM products";
     connection.query(query, function(err, res) {
@@ -35,11 +37,12 @@ function displayItems() {
         }, {});
 
         console.table(idAsIndex);
-        promptUser(idAsIndex);
+        itemIDs = Object.keys(idAsIndex);
+        promptUser();
     });
 }
 
-function promptUser(items) {
+function promptUser() {
     inquirer
         .prompt([
             {
@@ -56,7 +59,7 @@ function promptUser(items) {
                             name: "id",
                             type: "rawlist",
                             message: "Please select desired item by ID (index)",
-                            choices: Object.keys(items)
+                            choices: itemIDs
                         },
                         {
                             name: "qty",
@@ -70,8 +73,7 @@ function promptUser(items) {
                         }
                     ])
                     .then(function(order) {
-                        console.log("placing order for " + order.qty + " unit(s) of " + order.id);
-
+                        placeOrder(order);
                     });
             } else {
                 console.log("exiting app...");
@@ -79,4 +81,34 @@ function promptUser(items) {
             }
         });
 }
+
+function placeOrder(order) {
+    const query = "SELECT stock_quantity,price FROM products WHERE ?";
+    connection.query(query, { item_id: order.id }, function(err, res) {
+        if (err) throw err;
+
+        const newQty = res[0].stock_quantity - order.qty;
+        const orderCost = '$' + (order.qty * res[0].price).toFixed(2);
+
+        if (newQty >= 0) {
+            const query = "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
+            connection.query(query, [newQty, order.id], function(err, res) {
+                if (err) throw err;
+
+                if (res.changedRows === 0) {
+                    console.log("Sorry! There was an error while processing your order.");
+                } else {
+                    console.log("Order placed! The total cost is " + orderCost);
+                }
+
+                promptUser();
+            });
+        } else {
+            console.log("Insufficient quantity!");
+            promptUser();
+        }        
+    });
+}
+
+
 
