@@ -39,7 +39,7 @@ function managerMenu() {
                     addInventory();
                     break;
                 case 'Add New Product':
-                    console.log('Add New Product')
+                    newProduct();
                     break;
                 case 'Exit Program':
                     console.log('Exiting program...');
@@ -99,7 +99,7 @@ function addInventory() {
             ])
             .then(function(item) {
                 if (item.addQty == 0) {
-                    console.log("Cancelled 'Add to Inventory'");
+                    console.log("cancelling 'Add to Inventory'...");
                     managerMenu();
                 } else {
                     const query = "UPDATE products SET stock_quantity = stock_quantity + ? WHERE item_id = ?";
@@ -118,4 +118,82 @@ function addInventory() {
     });
 }
 
-//   * If a manager selects `Add New Product`, it should allow the manager to add a completely new product to the store.
+function newProduct() {
+    connection.query("SELECT DISTINCT department_name FROM products", function(err, res) {
+        if (err) throw err;
+
+        const depts = res.reduce(function(acc, currentVal, currentIndex) {
+            acc[currentIndex] = currentVal.department_name;
+            return acc;
+        }, []);
+
+        inquirer
+            .prompt([
+                {
+                    name: "dept",
+                    type: "rawlist",
+                    message: "Select department for new product:",
+                    choices: depts
+                },
+                {
+                    name: "name",
+                    message: "Please enter product title:"
+                },
+                {
+                    name: "price",
+                    message: "Enter per unit price for item:",
+                    validate: function(value) {
+                        if (!isNaN(value) && value > 0) {
+                            return true;
+                        }
+                        return false;
+                    }
+                },
+                {
+                    name: "qty",
+                    message: "Please enter starting inventory amount:",
+                    validate: function(value) {
+                        if (!isNaN(value) && parseInt(value) > 0) {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            ])
+            .then(function(item) {
+                connection.query("SELECT MAX(item_id) AS prevID FROM products WHERE ?", { department_name: item.dept }, function(err, res) {
+                    if (err) throw err;
+
+                    // this code block generates the value for the new 'item_id' based off the existing items in the department
+                    let itemID;
+                    if (res.length == 0) {
+                        console.log("THIS PORTION NEEDS WORK")
+                        itemID = 'newItem';
+                    } else {
+                        itemID = res[0].prevID.slice(0,3);
+                        const itemIDnum = function() {
+                            let num = parseInt(res[0].prevID.slice(3));
+                            num++;
+                            if (num < 10) {
+                                num = '0' + num;
+                            }
+                            return num;
+                        }
+                        itemID += itemIDnum();
+                    }
+
+                    const query = "INSERT INTO products (item_id, product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
+                    connection.query(query, [itemID, item.name, item.dept, item.price, item.qty], function(err, res) {
+                        if (err) throw err;
+
+                        if (res.affectedRows === 0) {
+                            console.log("Sorry! There was an error while adding the item to the database.");
+                        } else {
+                            console.log("Successfully added new product '" + itemID + "'");
+                        }
+                        managerMenu();
+                    });
+                });
+            });
+    });
+}
