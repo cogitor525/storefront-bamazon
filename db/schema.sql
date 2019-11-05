@@ -11,3 +11,9 @@ CREATE TABLE products (
     price FLOAT,
     stock_quantity INT
 );
+
+CREATE TABLE departments (
+    department_id VARCHAR(5) PRIMARY KEY,
+    department_name VARCHAR(25),
+    over_head_costs INT
+);
