@@ -119,6 +119,7 @@ function addInventory() {
 }
 
 function newProduct() {
+// this section needs to be altered to reference 'departments' table
     connection.query("SELECT DISTINCT department_name FROM products", function(err, res) {
         if (err) throw err;
 
@@ -161,6 +162,7 @@ function newProduct() {
                 }
             ])
             .then(function(item) {
+// this section needs work to allow for first item of newly created department (by supervisor)
                 connection.query("SELECT MAX(item_id) AS prevID FROM products WHERE ?", { department_name: item.dept }, function(err, res) {
                     if (err) throw err;
 
