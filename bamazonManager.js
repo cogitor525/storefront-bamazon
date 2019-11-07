@@ -119,8 +119,7 @@ function addInventory() {
 }
 
 function newProduct() {
-// this section needs to be altered to reference 'departments' table
-    connection.query("SELECT DISTINCT department_name FROM products", function(err, res) {
+    connection.query("SELECT department_id, department_name FROM departments", function(err, res) {
         if (err) throw err;
 
         const depts = res.reduce(function(acc, currentVal, currentIndex) {
@@ -162,15 +161,19 @@ function newProduct() {
                 }
             ])
             .then(function(item) {
-// this section needs work to allow for first item of newly created department (by supervisor)
-                connection.query("SELECT MAX(item_id) AS prevID FROM products WHERE ?", { department_name: item.dept }, function(err, res) {
+                const deptID = res.find(function(ele) {
+                    return ele.department_name === item.dept;
+                }).department_id;
+
+                connection.query("SELECT MAX(item_id) AS prevID FROM products WHERE ?", { department_id: deptID }, function(err, res) {
                     if (err) throw err;
 
-                    // this code block generates the value for the new 'item_id' based off the existing items in the department
+                    // this code block generates the value for the new 'item_id' based off the existing items in the department,
+                    // OR defaults to a starting value if the item is first for the department
                     let itemID;
                     if (res.length == 0) {
-                        console.log("THIS PORTION NEEDS WORK")
-                        itemID = 'newItem';
+                        console.log("THIS PORTION NEEDS TESTING");
+                        itemID = deptID + "-01";
                     } else {
                         itemID = res[0].prevID.slice(0,3);
                         const itemIDnum = function() {
@@ -184,8 +187,8 @@ function newProduct() {
                         itemID += itemIDnum();
                     }
 
-                    const query = "INSERT INTO products (item_id, product_name, department_name, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
-                    connection.query(query, [itemID, item.name, item.dept, item.price, item.qty], function(err, res) {
+                    const query = "INSERT INTO products (item_id, product_name, department_id, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
+                    connection.query(query, [itemID, item.name, deptID, item.price, item.qty], function(err, res) {
                         if (err) throw err;
 
                         if (res.affectedRows === 0) {
