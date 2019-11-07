@@ -88,17 +88,17 @@ function placeOrder(order) {
         if (err) throw err;
 
         const newQty = res[0].stock_quantity - order.qty;
-        const orderCost = '$' + (order.qty * res[0].price).toFixed(2);
+        const orderCost = order.qty * res[0].price;
 
         if (newQty >= 0) {
-            const query = "UPDATE products SET stock_quantity = ? WHERE item_id = ?";
-            connection.query(query, [newQty, order.id], function(err, res) {
+            const query = "UPDATE products SET stock_quantity = ?, product_sales = product_sales + ? WHERE item_id = ?";
+            connection.query(query, [newQty, orderCost, order.id], function(err, res) {
                 if (err) throw err;
 
                 if (res.changedRows === 0) {
                     console.log("Sorry! There was an error while processing your order.");
                 } else {
-                    console.log("Order placed! The total cost is " + orderCost);
+                    console.log("Order placed! The total cost is $" + orderCost.toFixed(2));
                 }
 
                 promptUser();
@@ -109,6 +109,3 @@ function placeOrder(order) {
         }        
     });
 }
-
-
-
