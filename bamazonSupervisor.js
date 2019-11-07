@@ -33,7 +33,9 @@ function supervisorMenu() {
                     viewSales();
                     break;
                 case 'Create New Department':
-                    createDept();
+                    // createDept();
+                    console.log("createDept() here");
+                    supervisorMenu();
                     break;
                 case 'Exit Program':
                     console.log('Exiting program...');
@@ -47,25 +49,24 @@ function supervisorMenu() {
 }
 
 function viewSales() {
-    let query = "SELECT department_id, department_name, over_head_costs, product_sales, (product_sales - over_head_costs) AS total_profit ";
-    query += "";
-    
+    let query = "SELECT d.department_id, department_name, over_head_costs, ";
+    query += "SUM(product_sales) AS dept_sales, (SUM(product_sales) - over_head_costs) AS total_profit ";
+    query += "FROM departments AS d LEFT JOIN products AS p ON d.department_id = p.department_id GROUP BY department_id";
+
     connection.query(query, function(err, res) {
         if (err) throw err;
 
+        const idAsIndex = res.reduce(function(acc, {department_id, ...x}) {
+            acc[department_id] = x;
+            return acc;
+        }, {});
+        console.table(idAsIndex);
+
+        supervisorMenu();
     });
 }
-
-// 4. When selects `View Product Sales by Department`, should display table in terminal window.
 
 // | department_id | department_name | over_head_costs | product_sales | total_profit |
 // | ------------- | --------------- | --------------- | ------------- | ------------ |
 // | 01            | Electronics     | 10000           | 20000         | 10000        |
 // | 02            | Clothing        | 60000           | 100000        | 40000        |
-
-// 5. `total_profit` should be calculated on the fly using difference between `over_head_costs` and `product_sales`.
-//     `total_profit` should not be stored in any database. You should use a custom alias.
-
-//    * Hint: You may need to look into aliases in MySQL.
-//    * Hint: You may need to look into GROUP BYs.
-//    * Hint: You may need to look into JOINS.

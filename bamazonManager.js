@@ -171,8 +171,7 @@ function newProduct() {
                     // this code block generates the value for the new 'item_id' based off the existing items in the department,
                     // OR defaults to a starting value if the item is first for the department
                     let itemID;
-                    if (res.length == 0) {
-                        console.log("THIS PORTION NEEDS TESTING");
+                    if (res[0].prevID === null) {
                         itemID = deptID + "-01";
                     } else {
                         itemID = res[0].prevID.slice(0,3);
