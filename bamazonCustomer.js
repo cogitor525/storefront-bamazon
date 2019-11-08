@@ -15,12 +15,11 @@ connection.connect(function(err) {
     displayItems();
 });
 
-// ***** this may need fixing to exclude items out-of-stock *****
 let itemIDs;
 
 function displayItems() {
-// ***** change so only displays items in stock? *****
-    const query = "SELECT item_id,product_name,price FROM products";
+    // items out-of-stock will not display
+    const query = "SELECT item_id,product_name,price FROM products WHERE stock_quantity > 0";
     connection.query(query, function(err, res) {
         if (err) throw err;
 
@@ -45,44 +44,63 @@ function displayItems() {
 }
 
 function promptUser() {
+    const options = ['Place an order', 'Display available items', 'Exit'];
     inquirer
-// ***** change this part to include option to display items again *****
         .prompt([
             {
-                name: "confirm",
-                type: "confirm",
-                message: "Would you like to place an order?"
+                name: "menu",
+                type: "rawlist",
+                message: "What would you like to do?",
+                choices: options
             }
         ])
-        .then(function(answer) {
-            if (answer.confirm) {
-                inquirer
-                    .prompt([
-                        {
-                            name: "id",
-                            type: "rawlist",
-                            message: "Please select desired item by ID (index)",
-                            choices: itemIDs
-                        },
-                        {
-                            name: "qty",
-                            message: "How many would you like to order?",
-                            validate: function(value) {
-                                if (!isNaN(value) && parseInt(value) > 0) {
-                                    return true;
-                                }
-                                return false;
-                            }
-                        }
-                    ])
-                    .then(function(order) {
-                        placeOrder(order);
-                    });
-            } else {
-                console.log("exiting app...");
-                connection.end();
+        .then(function(choice) {
+            switch(choice.menu) {
+                case 'Place an order':
+                    getOrder();
+                    break;
+                case 'Display available items':
+                    displayItems();
+                    break;
+                case 'Exit':
+                    console.log('See you again soon!');
+                    connection.end();
+                    break;
+                default:
+                    console.log('Error: unrecognized input');
+                    connection.end();
             }
         });
+}
+
+function getOrder() {
+    inquirer
+        .prompt([
+            {
+                name: "id",
+                type: "rawlist",
+                message: "Please select desired item by ID (index)",
+                choices: itemIDs
+            },
+            {
+                name: "qty",
+                message: "How many would you like to order? (0 to cancel)",
+                validate: function(value) {
+                    if (!isNaN(value) && parseInt(value) >= 0) {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        ])
+        .then(function(order) {
+            if (parseInt(order.qty) === 0) {
+                console.log("Order cancelled");
+                promptUser();
+            } else {
+                placeOrder(order);
+            }
+        });         
 }
 
 function placeOrder(order) {
