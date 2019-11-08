@@ -15,11 +15,11 @@ connection.connect(function(err) {
     displayItems();
 });
 
-// this may need fixing to exclude items out-of-stock
+// ***** this may need fixing to exclude items out-of-stock *****
 let itemIDs;
 
 function displayItems() {
-// change so only displays items in stock?
+// ***** change so only displays items in stock? *****
     const query = "SELECT item_id,product_name,price FROM products";
     connection.query(query, function(err, res) {
         if (err) throw err;
@@ -46,7 +46,7 @@ function displayItems() {
 
 function promptUser() {
     inquirer
-// change this part to include option to display items again
+// ***** change this part to include option to display items again *****
         .prompt([
             {
                 name: "confirm",

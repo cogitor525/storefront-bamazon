@@ -33,9 +33,7 @@ function supervisorMenu() {
                     viewSales();
                     break;
                 case 'Create New Department':
-                    // createDept();
-                    console.log("createDept() here");
-                    supervisorMenu();
+                    createDept();
                     break;
                 case 'Exit Program':
                     console.log('Exiting program...');
@@ -66,7 +64,55 @@ function viewSales() {
     });
 }
 
-// | department_id | department_name | over_head_costs | product_sales | total_profit |
-// | ------------- | --------------- | --------------- | ------------- | ------------ |
-// | 01            | Electronics     | 10000           | 20000         | 10000        |
-// | 02            | Clothing        | 60000           | 100000        | 40000        |
+function createDept() {
+    inquirer
+        .prompt([
+            {
+                name: "name",
+                message: "Please enter name of new department:",
+                validate: function(value) {
+                    if (value.length > 25) {
+                        return "Department name cannot exceed 25 characters in length!";
+                    } else if (value.length < 5) {
+                        return "Department name should be at least 5 characters in length";
+                    } else {
+                        return true;
+                    }
+                }
+            },
+            {
+                name: "id",
+                message: "Enter a [two character] ID code for this new department:",
+                validate: function(value) {
+                    if (value.length != 2) {
+                        return "Department ID must be 2 characters in length";
+                    } else {
+                        return true;
+                    }
+                }
+            },
+            {
+                name: "overhead",
+                message: "Please enter overhead costs for department:",
+                validate: function(value) {
+                    if (!isNaN(value) && parseInt(value) > 0) {
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        ])
+        .then(function(dept) {
+            const query = "INSERT INTO departments (department_id, department_name, over_head_costs) VALUES (?, ?, ?)";
+            connection.query(query, [dept.id, dept.name, dept.overhead], function(err, res) {
+                if (err) throw err;
+
+                if (res.affectedRows === 0) {
+                    console.log("Sorry! There was an error while adding the dept to the database.");
+                } else {
+                    console.log("Successfully added new department '" + dept.name + "'");
+                }
+                supervisorMenu();
+            });
+        });
+}
